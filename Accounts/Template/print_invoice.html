@@ -1,0 +1,162 @@
+{% extends 'Accounts/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Sales Invoice #{{ sale.id }}</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Invoice Header -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <h4>Company Details</h4>
+                            <p>Star Mango</p>
+                            <p>123 Mango Street</p>
+                            <p>Mango City, MC 12345</p>
+                        </div>
+                        <div class="col-6 text-right">
+                            <h4>Invoice Details</h4>
+                            <p>Date: {{ sale.date|date:"F d, Y" }}</p>
+                            <p>Invoice #: {{ sale.id }}</p>
+                            <p>Status: {{ sale.get_status_display }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Customer Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4>Customer Details</h4>
+                            <p>Name: {{ sale.customer.name }}</p>
+                            <p>Address: {{ sale.customer.address }}</p>
+                            <p>Phone: {{ sale.customer.phone }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td>{{ product.product.name }}</td>
+                                    <td>{{ product.quantity }}</td>
+                                    <td>{{ product.unit_price }}</td>
+                                    <td>{{ product.total }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-right"><strong>Subtotal:</strong></td>
+                                    <td>{{ sale.subtotal }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-right"><strong>Tax:</strong></td>
+                                    <td>{{ sale.tax }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-right"><strong>Total:</strong></td>
+                                    <td>{{ sale.total }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Payment Details -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h4>Payment Details</h4>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments %}
+                                    <tr>
+                                        <td>{{ payment.date|date:"F d, Y" }}</td>
+                                        <td>{{ payment.amount }}</td>
+                                        <td>{{ payment.get_payment_method_display }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" class="text-right"><strong>Total Paid:</strong></td>
+                                        <td>{{ sale.total_paid }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" class="text-right"><strong>Balance:</strong></td>
+                                        <td>{{ sale.balance }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h4>Terms and Conditions</h4>
+                            <p>1. Payment is due within 30 days</p>
+                            <p>2. Goods once sold will not be taken back</p>
+                            <p>3. Subject to local jurisdiction</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .card-tools {
+        display: none;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .card-header {
+        border-bottom: none !important;
+    }
+    .card-body {
+        padding: 0 !important;
+    }
+    .table {
+        border-collapse: collapse;
+    }
+    .table td, .table th {
+        border: 1px solid #ddd;
+    }
+}
+</style>
+
+{% if print_mode %}
+<script>
+    window.onload = function() {
+        window.print();
+    };
+</script>
+{% endif %}
+{% endblock %} 

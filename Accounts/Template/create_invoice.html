@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Invoice</title>
+</head>
+<body>
+    <h1>Create a New Purchase Invoice</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="vendor">Vendor:</label>
+        <input type="text" id="vendor" name="vendor">
+        <br>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date">
+        <br>
+        <label for="product">Product:</label>
+        <input type="text" id="product" name="product">
+        <br>
+        <input type="submit" value="Create Invoice">
+    </form>
+</body>
+</html>

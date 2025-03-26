@@ -1,0 +1,259 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .dashboard-card {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+        }
+        .card-content {
+            position: relative;
+            padding: 24px;
+            min-height: 160px;
+        }
+        .stats-icon {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 3.5rem;
+            opacity: 0.2;
+        }
+        .metric-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #616161;
+            margin-bottom: 8px;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .collection {
+            border: none;
+            margin: 0;
+        }
+        .collection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #eeeeee !important;
+        }
+        .due-customer {
+            color: #2196F3;
+            font-weight: 500;
+        }
+        .due-vendor {
+            color: #f44336;
+            font-weight: 500;
+        }
+        .rupee:before {
+            content: "₹";
+            font-weight: 400;
+        }
+        .card-title {
+            font-size: 1.2rem !important;
+            font-weight: 600 !important;
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            color: #424242 !important;
+        }
+        .card-title i {
+            font-size: 1.5rem;
+        }
+        table.highlight tbody tr:hover {
+            background-color: #f5f5f5 !important;
+        }
+        th {
+            font-weight: 600 !important;
+            color: #616161 !important;
+        }
+        .data-table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .total-profit {
+            position: relative;
+            overflow: hidden;
+        }
+        .total-profit::after {
+            content: "";
+            position: absolute;
+            bottom: -30px;
+            right: -30px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col s12">
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col s12 m6 l3">
+                <div class="card white dashboard-card">
+                    <div class="card-content">
+                        <i class="material-icons stats-icon blue-text text-lighten-2">shopping_cart</i>
+                        <span class="metric-title">Total Purchases</span>
+                        <h4 class="metric-value blue-text text-darken-2 rupee">{{ total_purchase|floatformat:2 }}</h4>
+                        <span class="grey-text text-darken-1">Last 30 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col s12 m6 l3">
+                <div class="card white dashboard-card">
+                    <div class="card-content">
+                        <i class="material-icons stats-icon green-text text-lighten-2">attach_money</i>
+                        <span class="metric-title">Total Sales</span>
+                        <h4 class="metric-value green-text text-darken-2 rupee">{{ total_sales|floatformat:2 }}</h4>
+                        <span class="grey-text text-darken-1">Last 30 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col s12 m6 l3">
+                <div class="card white dashboard-card">
+                    <div class="card-content">
+                        <i class="material-icons stats-icon red-text text-lighten-2">money_off</i>
+                        <span class="metric-title">Total Expenses</span>
+                        <h4 class="metric-value red-text text-darken-2 rupee">{{ total_expenses|floatformat:2 }}</h4>
+                        <span class="grey-text text-darken-1">Including damages</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col s12 m6 l3">
+                <div class="card white dashboard-card total-profit">
+                    <div class="card-content">
+                        <i class="material-icons stats-icon teal-text text-lighten-2">show_chart</i>
+                        <span class="metric-title">Net Profit</span>
+                        <h4 class="metric-value teal-text text-darken-2 rupee">{{ profit_loss|floatformat:2 }}</h4>
+                        <span class="grey-text text-darken-1">Current balance</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Metrics -->
+        <div class="row">
+            <div class="col s12 m6 l3">
+                <div class="card white dashboard-card">
+                    <div class="card-content">
+                        <i class="material-icons stats-icon orange-text text-lighten-2">warning</i>
+                        <span class="metric-title">Total Damages</span>
+                        <h4 class="metric-value orange-text text-darken-2 rupee">{{ total_damages|floatformat:2 }}</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col s12 m6 l3">
+                <div class="card white dashboard-card">
+                    <div class="card-content">
+                        <i class="material-icons stats-icon purple-text text-lighten-2">inventory</i>
+                        <span class="metric-title">Packaging Cost</span>
+                        <h4 class="metric-value purple-text text-darken-2 rupee">{{ total_packaging_cost|floatformat:2 }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Due Sections -->
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="card white dashboard-card">
+                    <div class="card-content">
+                        <span class="card-title"><i class="material-icons blue-text text-darken-2">account_balance</i>Vendor Dues</span>
+                        <div class="collection">
+                            {% for vendor in highest_due_vendors %}
+                            <div class="collection-item">
+                                <span>{{ vendor.name }}</span>
+                                <span class="due-vendor rupee">{{ vendor.due|floatformat:2 }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="collection-item grey-text">No outstanding vendor dues</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col s12 m6">
+                <div class="card white dashboard-card">
+                    <div class="card-content">
+                        <span class="card-title"><i class="material-icons blue-text text-darken-2">people</i>Customer Dues</span>
+                        <div class="collection">
+                            {% for customer in highest_due_customers %}
+                            <div class="collection-item">
+                                <span>{{ customer.name }}</span>
+                                <span class="due-customer rupee">{{ customer.due|floatformat:2 }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="collection-item grey-text">No outstanding customer dues</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Lots Table -->
+        <div class="row">
+            <div class="col s12">
+                <div class="card white data-table">
+                    <div class="card-content">
+                        <span class="card-title"><i class="material-icons teal-text text-darken-2">storage</i>Inventory Summary</span>
+                        <table class="striped highlight">
+                            <thead class="teal lighten-5">
+                                <tr>
+                                    <th>Lot Number</th>
+                                    <th>Product</th>
+                                    <th class="right-align">Stock</th>
+                                    <th class="right-align">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lot in available_lots %}
+                                <tr>
+                                    <td>{{ lot.lot_number }}</td>
+                                    <td>{{ lot.product.name }}</td>
+                                    <td class="right-align">{{ lot.remaining_quantity|floatformat:2 }}</td>
+                                    <td class="right-align rupee">{{ lot.price|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="center-align grey-text">No inventory available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize any Materialize components if needed
+    });
+</script>
+{% endblock %}

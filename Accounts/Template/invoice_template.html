@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice {{ invoice.invoice_number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .total {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Invoice: {{ invoice.invoice_number }}</h1>
+        <p>Date: {{ invoice.date }}</p>
+        <p>Vendor: {{ invoice.vendor.name }}</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Serial No</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in invoice.products.all %}
+            <tr>
+                <td>{{ product.serial_number }}</td>
+                <td>{{ product.product.name }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.price }}</td>
+                <td>{{ product.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="total">Net Total: {{ invoice.net_total }}</p>
+    <p class="total">Paid Amount: {{ invoice.calculated_paid_amount }}</p>
+    <p class="total">Due Amount: {{ invoice.calculated_due_amount }}</p>
+</body>
+</html>

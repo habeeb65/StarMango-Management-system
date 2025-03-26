@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% load jazzmin %}
+
+{% block content %}
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Vendor Search</h3>
+            <div class="card-tools">
+                <form method="get">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="q" class="form-control" placeholder="Search vendors...">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <!-- Table content similar to dashboard -->
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
