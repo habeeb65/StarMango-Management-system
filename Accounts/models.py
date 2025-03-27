@@ -183,6 +183,9 @@ class Purchase(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
+   
+    current_stock = models.IntegerField(default=0)  # ✅ Ensure this field exists
+    threshold = models.IntegerField(default=5)  # ✅ Ensure this field exists
 
     def __str__(self):
         return self.name

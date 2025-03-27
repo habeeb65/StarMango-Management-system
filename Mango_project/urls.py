@@ -17,25 +17,25 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include 
-from django.contrib import admin
+
 from django.conf.urls.static import static
 from django.shortcuts import redirect
-from Accounts.views import generate_sales_invoice_pdf, dashboard, home
+from Accounts.views import generate_sales_invoice_pdf, home
 
 def redirect_to_accounts(request):
-    return redirect('home')
+    return redirect('/accounts/login/')
 
+    
 urlpatterns = [
     path('', home, name='home'),
-    path('admin/dashboard/', dashboard, name='admin-dashboard'),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('Accounts.urls')),  # Fixed spacing in include()
+    path('admin/', admin.site.urls),  # Admin and dashboard are now at the same URL
+    path('accounts/', include('Accounts.urls')),
     path('sales_invoice/<int:invoice_id>/pdf/', generate_sales_invoice_pdf, name='generate_sales_invoice_pdf'),
 ]
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
 
 
 

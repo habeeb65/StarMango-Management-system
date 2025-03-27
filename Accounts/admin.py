@@ -8,6 +8,28 @@ from django.utils.html import format_html
 from django.http import JsonResponse
 
 
+
+from django.shortcuts import render
+
+
+# Custom admin dashboard view
+def admin_dashboard(request):
+    return render(request, 'admin/dashboard.html')  # Ensure the template exists
+
+class AdminSite(admin.AdminSite):
+    """Custom Admin Panel to Show Dashboard as Homepage"""
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('', self.admin_view(admin_dashboard), name="dashboard"),  # Override index page
+        ]
+        return custom_urls + urls  # Load the custom dashboard first
+
+# Replace default Django admin with custom admin
+admin.site = AdminSite()
+
+
 admin.site.site_header = "Star Mango Supplies Korutla"   # Header displayed at the top of the admin
 admin.site.site_title = "Star Mango Supplies Korutla"     # Title tag for the admin pages
 admin.site.index_title = "Welcome to Star Mango Supplies Korutla Admin Panel"  # Title on the admin index page

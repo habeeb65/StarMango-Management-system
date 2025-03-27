@@ -17,6 +17,8 @@ const formValidation = {
         return isValid;
     },
 
+    
+
     // Validate numeric fields
     validateNumeric: (field) => {
         const value = field.value.trim();
@@ -196,6 +198,7 @@ const formValidation = {
             return false;
         }
     },
+
 
     // Validate credit card number
     validateCreditCard: (field) => {

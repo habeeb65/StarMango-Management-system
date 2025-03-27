@@ -1,10 +1,28 @@
 from django.urls import path
 from . import views  # Import views directly from the current module
+from django.contrib import admin
 
+# Customize the admin panel
+admin.site.site_header = "Star Mango Admin"
+admin.site.site_title = "Star Mango Admin Portal"
+admin.site.index_title = "Welcome to the Star Mango Admin Portal"
+
+# Create a custom admin site
+class CustomAdminSite(admin.AdminSite):
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('', self.admin_view(views.dashboard), name='custom_admin_dashboard'),  # Make dashboard the default admin view
+        ]
+        return custom_urls + urls
+
+# Create and register the custom admin site
+admin_site = CustomAdminSite(name='admin')
+admin.site = admin_site
 
 urlpatterns = [
     path('create-invoice/', views.create_invoice, name='create_invoice'),
-    path('invoice/<int:invoice_id>/pdf/', views.generate_invoice_pdf, name='generate_invoice_pdf'),  # Use views.generate_invoice_pdf
+    path('invoice/<int:invoice_id>/pdf/', views.generate_invoice_pdf, name='generate_invoice_pdf'),
     path('Accountvendor_summary/', views.vendor_summary, name='vendor_summary'),
     path('expense/<int:pk>/pdf/', views.generate_expense_pdf, name='generate_expense_pdf'),
     path('damage/<int:pk>/pdf/', views.generate_damage_pdf, name='generate_damage_pdf'),

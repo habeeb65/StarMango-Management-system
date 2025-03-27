@@ -55,10 +55,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'Mango_project.urls'
 
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'Accounts', 'Template'),],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),  # Main templates folder
+            os.path.join(BASE_DIR, 'Accounts', 'Template'),  # Existing templates
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -70,6 +75,8 @@ TEMPLATES = [
         },
     },
 ]
+
+
 
 WSGI_APPLICATION = 'Mango_project.wsgi.application'
 
@@ -137,11 +144,54 @@ STATICFILES_FINDERS = [
 ]
 
 JAZZMIN_SETTINGS = {
+    "site_title": "Star Mango Admin",
+    "site_header": "Star Mango Admin Portal",
+    "site_brand": "Star Mango",
+    "welcome_sign": "Welcome to the Star Mango Admin Portal",
+    "copyright": "Star Mango Ltd",
+    "search_model": "auth.User",
+    "user_avatar": None,
+    "topmenu_links": [
+        {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": ["auth", "Accounts"],
     "custom_links": {
-        "Your App Name": [{
+        "Accounts": [{
             "name": "Dashboard",
-            "url": "admin-dashboard",  # URL name we defined
-            "icon": "fas fa-chart-line",  # Choose any FontAwesome icon
+            "url": "admin:index",
+            "icon": "fas fa-chart-line",
         }]
     },
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "Accounts.SalesInvoice": "fas fa-file-invoice-dollar",
+        "Accounts.PurchaseInvoice": "fas fa-shopping-cart",
+        "Accounts.Product": "fas fa-box",
+        "Accounts.Customer": "fas fa-user-tie",
+        "Accounts.PurchaseVendor": "fas fa-truck",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+    "related_modal_active": True,
+    "custom_css": None,
+    "custom_js": None,
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs",
+    },
 }
+
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    " https://e994-124-123-163-198.ngrok-free.app",
+]

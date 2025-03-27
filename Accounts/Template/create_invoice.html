@@ -1,22 +1,58 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Invoice</title>
-</head>
-<body>
-    <h1>Create a New Purchase Invoice</h1>
-    <form method="POST">
-        {% csrf_token %}
-        <label for="vendor">Vendor:</label>
-        <input type="text" id="vendor" name="vendor">
-        <br>
-        <label for="date">Date:</label>
-        <input type="date" id="date" name="date">
-        <br>
-        <label for="product">Product:</label>
-        <input type="text" id="product" name="product">
-        <br>
-        <input type="submit" value="Create Invoice">
-    </form>
-</body>
-</html>
+{% extends 'admin/base_site.html' %}
+
+{% block content %}
+<div class="dashboard">
+    <h1 class="text-center">Admin Dashboard</h1>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales</h5>
+                    <p class="card-text">{{ total_sales }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Sales</h5>
+                    <p class="card-text">{{ recent_sales.count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Low Stock Items</h5>
+                    <p class="card-text">{{ low_stock_items.count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h2 class="mt-4">Recent Sales</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Vendor</th>
+                <th>Amount</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in recent_sales %}
+            <tr>
+                <td>{{ sale.invoice_number }}</td>
+                <td>{{ sale.vendor.name }}</td>
+                <td>₹{{ sale.total|floatformat:2 }}</td>
+                <td>{{ sale.date|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No recent sales</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
