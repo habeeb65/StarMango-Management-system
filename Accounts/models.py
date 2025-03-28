@@ -180,20 +180,10 @@ class Purchase(models.Model):
     def __str__(self):
         return f"Purchase for Invoice {self.invoice.invoice_number}"
 
-
-class Product(models.Model):
-    name = models.CharField(max_length=100)
-   
-    current_stock = models.IntegerField(default=0)  # ✅ Ensure this field exists
-    threshold = models.IntegerField(default=5)  # ✅ Ensure this field exists
-
-    def __str__(self):
-        return self.name
-
-
 class Category(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
+    
 
     class Meta:
         verbose_name = "Category"
@@ -202,6 +192,19 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+class Product(models.Model):
+    name = models.CharField(max_length=100)
+    current_stock = models.IntegerField(default=0)
+    threshold = models.IntegerField(default=5)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
+    stock = models.IntegerField(default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return self.name
+    
+
+    
 
 class PurchaseProduct(models.Model):
     invoice = models.ForeignKey(PurchaseInvoice, on_delete=models.CASCADE, related_name='purchase_products')

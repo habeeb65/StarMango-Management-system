@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-user-shield"></i> Admin Dashboard</h5>
+            </div>
+            <div class="card-body">
+                <!-- Quick Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stats-value">{{ total_users }}</div>
+                                        <div class="stats-label">Total Users</div>
+                                    </div>
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stats-value">{{ total_products }}</div>
+                                        <div class="stats-label">Total Products</div>
+                                    </div>
+                                    <i class="fas fa-box"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stats-value">{{ total_vendors }}</div>
+                                        <div class="stats-label">Total Vendors</div>
+                                    </div>
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stats-value">{{ total_sales }}</div>
+                                        <div class="stats-label">Total Sales</div>
+                                    </div>
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Actions -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">User Management</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="{% url 'admin:auth_user_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-users"></i> Manage Users
+                                    </a>
+                                    <a href="{% url 'admin:auth_group_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-user-tag"></i> Manage Groups
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Inventory Management</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="{% url 'admin:Accounts_product_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-box"></i> Manage Products
+                                    </a>
+                                    <a href="{% url 'admin:Accounts_vendor_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-truck"></i> Manage Vendors
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Sales Management</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="{% url 'admin:Accounts_salesinvoice_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-shopping-cart"></i> Manage Sales
+                                    </a>
+                                    <a href="{% url 'admin:Accounts_purchaseinvoice_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-shopping-basket"></i> Manage Purchases
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Financial Management</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="{% url 'admin:Accounts_expense_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-receipt"></i> Manage Expenses
+                                    </a>
+                                    <a href="{% url 'admin:Accounts_damage_changelist' %}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-exclamation-triangle"></i> Manage Damages
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

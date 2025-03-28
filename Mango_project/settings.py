@@ -127,7 +127,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'Accounts/static'),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # Default primary key field type
@@ -135,9 +138,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #Manually Added
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'Accounts', 'static'),
-]
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -188,10 +188,3 @@ JAZZMIN_SETTINGS = {
         "auth.group": "vertical_tabs",
     },
 }
-
-
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    " https://e994-124-123-163-198.ngrok-free.app",
-]

@@ -23,6 +23,194 @@ from xhtml2pdf import pisa
 from django.contrib.staticfiles.finders import find
 import base64
 from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Sum, F
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.forms import UserCreationForm
+
+
+@staff_member_required
+def home(request):
+    # Get statistics for home page
+    total_inventory = Product.objects.count()
+    total_sales = SalesInvoice.objects.count()
+    total_customers = Customer.objects.count()
+    
+    # Calculate total revenue from sales
+    total_revenue = SalesInvoice.objects.aggregate(
+        total=Sum('net_total_after_packaging')
+    )['total'] or 0
+    
+    # Get recent sales (last 5)
+    recent_sales = SalesInvoice.objects.select_related('vendor').order_by('-date')[:5]
+    
+    # Get low stock items
+    low_stock_items = Product.objects.filter(current_stock__lte=F('threshold'))
+    
+    context = {
+        "total_inventory": total_inventory,
+        "total_sales": total_sales,
+        "total_customers": total_customers,
+        "total_revenue": total_revenue,
+        "recent_sales": recent_sales,
+        "low_stock_items": low_stock_items,
+    }
+    return render(request, 'home.html', context)
+
+@login_required
+def inventory_view(request):
+    # Get inventory items with pagination
+    inventory_items = Product.objects.select_related('category').all().order_by('name')
+    categories = Category.objects.all()
+    
+    # Get statistics
+    total_products = inventory_items.count()
+    low_stock_items = inventory_items.filter(current_stock__lte=F('threshold'))
+    
+    context = {
+        'inventory_items': inventory_items,
+        'categories': categories,
+        'total_products': total_products,
+        'low_stock_items': low_stock_items,
+    }
+    return render(request, 'inventory.html', context)
+
+@login_required
+def sales_view(request):
+    # Get all sales with related vendor info
+    sales = SalesInvoice.objects.select_related('vendor').order_by('-date')
+    
+    # Calculate today's sales
+    today = timezone.now().date()
+    today_sales = SalesInvoice.objects.filter(date=today).annotate(
+        total=Sum('sales_products__total')
+    ).aggregate(total=Sum('total'))['total'] or 0
+    
+    # Get total sales for statistics using sales_products__total
+    total_sales = SalesInvoice.objects.annotate(
+        sale_total=Sum('sales_products__total')
+    ).aggregate(
+        total=Sum('sale_total')
+    )['total'] or 0
+    
+    # Get recent sales for quick view
+    recent_sales = sales[:10]
+    
+    # Get vendors for sale creation
+    vendors = PurchaseVendor.objects.all()
+    
+    # Get products for sale creation
+    products = Product.objects.filter(current_stock__gt=0)
+    
+    context = {
+        'sales': sales,
+        'today_sales': today_sales,
+        'total_sales': total_sales,
+        'recent_sales': recent_sales,
+        'vendors': vendors,
+        'products': products,
+    }
+    return render(request, 'sales.html', context)
+
+@login_required
+def reports_view(request):
+    # Get date range from request
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    # Base queryset for sales and purchases
+    sales_query = SalesInvoice.objects.all()
+    purchases_query = PurchaseInvoice.objects.all()
+    
+    # Apply date filters if provided
+    if start_date:
+        sales_query = sales_query.filter(date__gte=start_date)
+        purchases_query = purchases_query.filter(date__gte=start_date)
+    if end_date:
+        sales_query = sales_query.filter(date__lte=end_date)
+        purchases_query = purchases_query.filter(date__lte=end_date)
+    
+    # Get total sales using sales_products__total
+    total_sales = sales_query.annotate(
+        sale_total=Sum('sales_products__total')
+    ).aggregate(
+        total=Sum('sale_total')
+    )['total'] or 0
+    
+    # Get total purchases
+    total_purchases = purchases_query.aggregate(
+        total=Sum('net_total')
+    )['total'] or 0
+    
+    # Get total expenses and damages
+    expenses_query = Expense.objects.all()
+    damages_query = Damages.objects.all()
+    
+    if start_date:
+        expenses_query = expenses_query.filter(date__gte=start_date)
+        damages_query = damages_query.filter(date__gte=start_date)
+    if end_date:
+        expenses_query = expenses_query.filter(date__lte=end_date)
+        damages_query = damages_query.filter(date__lte=end_date)
+    
+    total_expenses = expenses_query.aggregate(
+        total=Sum('amount')
+    )['total'] or 0
+    
+    total_damages = damages_query.aggregate(
+        total=Sum('amount_loss')
+    )['total'] or 0
+    
+    # Get recent sales and purchases
+    recent_sales = sales_query.select_related('vendor').order_by('-date')[:10]
+    recent_purchases = purchases_query.select_related('vendor').order_by('-date')[:10]
+    
+    # Get inventory status data
+    inventory_data = {
+        'in_stock': Product.objects.filter(current_stock__gt=F('threshold')).count(),
+        'low_stock': Product.objects.filter(current_stock__lte=F('threshold'), current_stock__gt=0).count(),
+        'out_of_stock': Product.objects.filter(current_stock=0).count()
+    }
+    
+    # Get payment methods distribution
+    payment_methods = ['Cash', 'Card', 'UPI', 'Bank Transfer']
+    payment_data = []
+    for method in payment_methods:
+        count = sales_query.filter(payment_method=method.lower()).count()
+        payment_data.append({
+            'method': method,
+            'count': count
+        })
+    
+    # Get top selling products
+    top_products = Product.objects.annotate(
+        total_quantity=Sum('salesproduct__net_weight'),
+        total_revenue=Sum('salesproduct__total')
+    ).filter(total_quantity__gt=0).order_by('-total_quantity')[:5]
+    
+    # Calculate profit/loss
+    total_profit = total_sales - (total_purchases + total_expenses + total_damages)
+    
+    context = {
+        'total_sales': total_sales,
+        'total_purchases': total_purchases,
+        'total_expenses': total_expenses,
+        'total_damages': total_damages,
+        'total_profit': total_profit,
+        'recent_sales': recent_sales,
+        'recent_purchases': recent_purchases,
+        'inventory_data': inventory_data,
+        'payment_methods': payment_methods,
+        'payment_data': payment_data,
+        'top_products': top_products,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'reports.html', context)
 
 
 # Font and Logo Setup
@@ -700,42 +888,40 @@ def generate_packaging_invoice_pdf(request, invoice_id):
     buffer.close()
     return response
 
+@login_required
 def home(request):
-    """
-    Home view that displays dashboard information
-    """
-    # Get total inventory count
-    total_inventory = Product.objects.count()
+    # Get total products
+    total_products = Product.objects.count()
     
-    # Get total sales count
-    total_sales = SalesInvoice.objects.count()
-    
-    # Get total customers count
-    total_customers = Customer.objects.count()
-    
-    # Calculate total revenue from sales_products
-    total_revenue = SalesInvoice.objects.annotate(
+    # Get total sales (using sales_products total)
+    total_sales = SalesInvoice.objects.annotate(
         total=Sum('sales_products__total')
-    ).aggregate(total_revenue=Sum('total'))['total_revenue'] or 0
+    ).aggregate(total=Sum('total'))['total'] or 0
     
-    # Get recent sales with their total amounts
-    recent_sales = SalesInvoice.objects.annotate(
+    # Get total vendors
+    total_vendors = PurchaseVendor.objects.count()
+    
+    # Get today's sales (fixed date lookup)
+    today = timezone.now().date()
+    today_sales = SalesInvoice.objects.filter(date=today).annotate(
         total=Sum('sales_products__total')
-    ).select_related('vendor').order_by('-date')[:5]
+    ).aggregate(total=Sum('total'))['total'] or 0
     
-    # Get low stock items
-    low_stock_items = Product.objects.filter(current_stock__lte=F('threshold'))
+    # Get recent sales
+    recent_sales = SalesInvoice.objects.select_related('vendor').order_by('-date')[:5]
+    
+    # Get low stock products (using threshold)
+    low_stock_products = Product.objects.filter(current_stock__lte=F('threshold'))[:5]
     
     context = {
-        'total_inventory': total_inventory,
+        'total_products': total_products,
         'total_sales': total_sales,
-        'total_customers': total_customers,
-        'total_revenue': total_revenue,
+        'total_vendors': total_vendors,
+        'today_sales': today_sales,
         'recent_sales': recent_sales,
-        'low_stock_items': low_stock_items,
+        'low_stock_products': low_stock_products,
     }
-    
-    return render(request, 'home.html', context)
+    return render(request, 'base.html', context)
 
 def inventory_view(request):
     """Inventory management view"""
@@ -773,253 +959,116 @@ def inventory_view(request):
     }
     return render(request, 'inventory.html', context)
 
+@login_required
 def add_inventory_item(request):
-    """Add new inventory item"""
     if request.method == 'POST':
-        try:
-            name = request.POST.get('name')
-            category_id = request.POST.get('category')
-            stock = request.POST.get('stock')
-            price = request.POST.get('price')
-            min_stock = request.POST.get('min_stock')
-            
-            Product.objects.create(
-                name=name,
-                category_id=category_id,
-                current_stock=stock,
-                unit_price=price,
-                min_stock=min_stock
-            )
-            
-            messages.success(request, 'Item added successfully!')
-            return redirect('inventory')
-        except Exception as e:
-            messages.error(request, f'Error adding item: {str(e)}')
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+        price = request.POST.get('price')
+        current_stock = request.POST.get('current_stock')
+        threshold = request.POST.get('threshold')
+        
+        Product.objects.create(
+            name=name,
+            category_id=category_id,
+            price=price,
+            current_stock=current_stock,
+            threshold=threshold
+        )
+        messages.success(request, 'Product added successfully!')
+        return redirect('inventory')
     
-    return redirect('inventory')
+    categories = Category.objects.all()
+    return render(request, 'add_inventory_item.html', {'categories': categories})
 
+@login_required
 def edit_inventory_item(request, item_id):
-    """Edit inventory item"""
     item = get_object_or_404(Product, id=item_id)
     
     if request.method == 'POST':
-        try:
-            item.name = request.POST.get('name')
-            item.category_id = request.POST.get('category')
-            item.current_stock = request.POST.get('stock')
-            item.unit_price = request.POST.get('price')
-            item.min_stock = request.POST.get('min_stock')
-            item.save()
-            
-            messages.success(request, 'Item updated successfully!')
-            return redirect('inventory')
-        except Exception as e:
-            messages.error(request, f'Error updating item: {str(e)}')
+        item.name = request.POST.get('name')
+        item.category_id = request.POST.get('category')
+        item.price = request.POST.get('price')
+        item.current_stock = request.POST.get('current_stock')
+        item.threshold = request.POST.get('threshold')
+        item.save()
+        
+        messages.success(request, 'Product updated successfully!')
+        return redirect('inventory')
     
-    context = {
-        'item': item,
-        'categories': Category.objects.all(),
-    }
-    return render(request, 'edit_inventory.html', context)
+    categories = Category.objects.all()
+    return render(request, 'edit_inventory_item.html', {'item': item, 'categories': categories})
 
+@login_required
 def delete_inventory_item(request, item_id):
-    """Delete inventory item"""
     item = get_object_or_404(Product, id=item_id)
-    
-    try:
-        item.delete()
-        messages.success(request, 'Item deleted successfully!')
-    except Exception as e:
-        messages.error(request, f'Error deleting item: {str(e)}')
-    
+    item.delete()
+    messages.success(request, 'Product deleted successfully!')
     return redirect('inventory')
 
-def sales_view(request):
-    """Sales management view"""
-    # Get filter parameters
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    
-    # Base queryset
-    sales = SalesInvoice.objects.select_related('customer').order_by('-date')
-    
-    # Apply date filters
-    if start_date:
-        sales = sales.filter(date__gte=start_date)
-    if end_date:
-        sales = sales.filter(date__lte=end_date)
-    
-    # Calculate sales metrics
-    today = timezone.now().date()
-    today_sales = SalesInvoice.objects.filter(date=today).aggregate(
-        total=Sum('sales_products__total')
-    )['total'] or 0
-    today_count = SalesInvoice.objects.filter(date=today).count()
-    
-    week_ago = today - timedelta(days=7)
-    week_sales = SalesInvoice.objects.filter(date__gte=week_ago).aggregate(
-        total=Sum('sales_products__total')
-    )['total'] or 0
-    week_count = SalesInvoice.objects.filter(date__gte=week_ago).count()
-    
-    month_ago = today - timedelta(days=30)
-    month_sales = SalesInvoice.objects.filter(date__gte=month_ago).aggregate(
-        total=Sum('sales_products__total')
-    )['total'] or 0
-    month_count = SalesInvoice.objects.filter(date__gte=month_ago).count()
-    
-    # Calculate average sale
-    total_sales = SalesInvoice.objects.aggregate(
-        total=Sum('sales_products__total')
-    )['total'] or 0
-    total_count = SalesInvoice.objects.count()
-    avg_sale = total_sales / total_count if total_count > 0 else 0
-    
-    # Pagination
-    paginator = Paginator(sales, 10)
-    page = request.GET.get('page')
-    sales = paginator.get_page(page)
-    
-    # Get inventory items for new sale form
-    inventory_items = Product.objects.filter(current_stock__gt=0)
-    
-    context = {
-        'sales': sales,
-        'today_sales': today_sales,
-        'today_count': today_count,
-        'week_sales': week_sales,
-        'week_count': week_count,
-        'month_sales': month_sales,
-        'month_count': month_count,
-        'avg_sale': avg_sale,
-        'inventory_items': inventory_items,
-    }
-    return render(request, 'sales.html', context)
-
+@login_required
 def create_sale(request):
-    """Create new sale"""
     if request.method == 'POST':
+        # Handle sale creation
+        vendor_id = request.POST.get('vendor')
+        products = request.POST.getlist('products[]')
+        quantities = request.POST.getlist('quantities[]')
+        
         try:
-            # Create sale invoice
+            vendor = PurchaseVendor.objects.get(id=vendor_id)
             sale = SalesInvoice.objects.create(
-                customer_name=request.POST.get('customer_name'),
-                customer_phone=request.POST.get('customer_phone'),
-                payment_method=request.POST.get('payment_method'),
-                payment_status=request.POST.get('payment_status')
+                vendor=vendor,
+                date=timezone.now(),
+                payment_status='pending'
             )
             
-            # Add sale items
-            items = request.POST.getlist('items[]')
-            quantities = request.POST.getlist('quantities[]')
-            
-            for item_id, quantity in zip(items, quantities):
-                product = Product.objects.get(id=item_id)
-                product.current_stock -= float(quantity)
-                product.save()
+            total = 0
+            for product_id, quantity in zip(products, quantities):
+                product = Product.objects.get(id=product_id)
+                price = product.selling_price
+                item_total = price * int(quantity)
+                total += item_total
                 
-                sale.sales_products.create(
+                SalesProduct.objects.create(
+                    sale=sale,
                     product=product,
                     quantity=quantity,
-                    unit_price=product.unit_price,
-                    total=float(quantity) * product.unit_price
+                    price=price,
+                    total=item_total
                 )
+                
+                # Update product stock
+                product.current_stock -= int(quantity)
+                product.save()
             
-            messages.success(request, 'Sale completed successfully!')
-            return redirect('sales')
+            sale.net_total = total
+            sale.save()
+            
+            messages.success(request, 'Sale created successfully!')
+            return redirect('view_sale', sale_id=sale.id)
+            
         except Exception as e:
             messages.error(request, f'Error creating sale: {str(e)}')
+            return redirect('sales')
     
-    return redirect('sales')
+    vendors = PurchaseVendor.objects.all()
+    products = Product.objects.filter(current_stock__gt=0)
+    context = {
+        'vendors': vendors,
+        'products': products,
+    }
+    return render(request, 'create_sale.html', context)
 
+@login_required
 def view_sale(request, sale_id):
-    """View sale details"""
-    sale = get_object_or_404(SalesInvoice, id=sale_id)
-    context = {'sale': sale}
-    return render(request, 'view_sale.html', context)
-
-def reports_view(request):
-    """Reports and analytics view"""
-    # Get date range
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    
-    # Base queryset
-    sales = SalesInvoice.objects.all()
-    purchases = PurchaseInvoice.objects.all()
-    
-    # Apply date filters
-    if start_date:
-        sales = sales.filter(date__gte=start_date)
-        purchases = purchases.filter(date__gte=start_date)
-    if end_date:
-        sales = sales.filter(date__lte=end_date)
-        purchases = purchases.filter(date__lte=end_date)
-    
-    # Calculate metrics
-    total_sales = sales.aggregate(total=Sum('sales_products__total'))['total'] or 0
-    sales_count = sales.count()
-    
-    total_purchases = purchases.aggregate(total=Sum('net_total'))['total'] or 0
-    purchases_count = purchases.count()
-    
-    # Calculate profit
-    expenses = Expense.objects.filter(date__range=[start_date, end_date]).aggregate(
-        total=Sum('amount')
-    )['total'] or 0
-    
-    net_profit = total_sales - (total_purchases + expenses)
-    gross_margin = (net_profit / total_sales * 100) if total_sales > 0 else 0
-    
-    # Calculate average order value
-    avg_order_value = total_sales / sales_count if sales_count > 0 else 0
-    
-    # Get sales trend data
-    sales_dates = []
-    sales_data = []
-    for i in range(30):
-        date = timezone.now().date() - timedelta(days=i)
-        daily_sales = SalesInvoice.objects.filter(date=date).aggregate(
-            total=Sum('sales_products__total')
-        )['total'] or 0
-        sales_dates.append(date.strftime('%Y-%m-%d'))
-        sales_data.append(float(daily_sales))
-    
-    # Get inventory status data
-    inventory_data = [
-        Product.objects.filter(current_stock__gt=F('min_stock')).count(),
-        Product.objects.filter(current_stock__lte=F('min_stock')).count(),
-        Product.objects.filter(current_stock=0).count()
-    ]
-    
-    # Get payment methods distribution
-    payment_methods = ['Cash', 'Card', 'UPI', 'Bank Transfer']
-    payment_data = []
-    for method in payment_methods:
-        count = SalesInvoice.objects.filter(payment_method=method.lower()).count()
-        payment_data.append(count)
-    
-    # Get top selling products
-    top_products = Product.objects.annotate(
-        total_quantity=Sum('sales_products__quantity'),
-        total_revenue=Sum('sales_products__total')
-    ).order_by('-total_quantity')[:5]
+    sale = get_object_or_404(SalesInvoice.objects.select_related('vendor'), id=sale_id)
+    sale_products = sale.sales_products.select_related('product').all()
     
     context = {
-        'total_sales': total_sales,
-        'sales_count': sales_count,
-        'total_purchases': total_purchases,
-        'purchases_count': purchases_count,
-        'net_profit': net_profit,
-        'gross_margin': gross_margin,
-        'avg_order_value': avg_order_value,
-        'sales_dates': sales_dates,
-        'sales_data': sales_data,
-        'inventory_data': inventory_data,
-        'payment_methods': payment_methods,
-        'payment_data': payment_data,
-        'top_products': top_products,
+        'sale': sale,
+        'sale_products': sale_products,
     }
-    return render(request, 'reports.html', context)
+    return render(request, 'view_sale.html', context)
 
 def export_sales_report(request):
     """Export sales report"""
@@ -1051,3 +1100,217 @@ def print_invoice(request, sale_id):
         'print_mode': True,
     }
     return render(request, 'Accounts/print_invoice.html', context)
+
+def is_admin(user):
+    return user.is_staff
+
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    # Get total users
+    total_users = User.objects.count()
+    
+    # Get total products
+    total_products = Product.objects.count()
+    
+    # Get total vendors
+    total_vendors = PurchaseVendor.objects.count()
+    
+    # Get total sales
+    total_sales = SalesInvoice.objects.annotate(
+        total=Sum('sales_products__total')
+    ).aggregate(total=Sum('total'))['total'] or 0
+    
+    # Get recent sales
+    recent_sales = SalesInvoice.objects.select_related('vendor').order_by('-date')[:5]
+    
+    # Get low stock products (using threshold)
+    low_stock_products = Product.objects.filter(current_stock__lte=F('threshold'))[:5]
+    
+    context = {
+        'total_users': total_users,
+        'total_products': total_products,
+        'total_vendors': total_vendors,
+        'total_sales': total_sales,
+        'recent_sales': recent_sales,
+        'low_stock_products': low_stock_products,
+    }
+    return render(request, 'admin_dashboard.html', context)
+
+@login_required
+def dashboard_view(request):
+    # Calculate total sales by summing up the sales_products totals
+    total_sales = SalesInvoice.objects.annotate(
+        sale_total=Sum('sales_products__total')
+    ).aggregate(
+        total=Sum('sale_total')
+    )['total'] or 0
+    
+    # Calculate total purchases
+    total_purchases = PurchaseInvoice.objects.aggregate(
+        total=Sum('net_total')
+    )['total'] or 0
+    
+    # Get total expenses and damages
+    total_expenses = Expense.objects.aggregate(
+        total=Sum('amount')
+    )['total'] or 0
+    
+    total_damages = Damages.objects.aggregate(
+        total=Sum('amount_loss')
+    )['total'] or 0
+    
+    # Get recent sales and purchases with related vendor info
+    recent_sales = SalesInvoice.objects.select_related('vendor').order_by('-date')[:5]
+    
+    # Calculate totals for each sale to avoid using template filter
+    sales_with_totals = []
+    for sale in recent_sales:
+        # Calculate the total for this sale
+        sale_total = sale.sales_products.aggregate(total=Sum('total'))['total'] or 0
+        sales_with_totals.append({
+            'sale': sale,
+            'total': sale_total
+        })
+    
+    # Get recent purchases
+    recent_purchases = PurchaseInvoice.objects.select_related('vendor').order_by('-date')[:5]
+    
+    # Get inventory status data
+    inventory_data = {
+        'in_stock': Product.objects.filter(current_stock__gt=F('threshold')).count(),
+        'low_stock': Product.objects.filter(current_stock__lte=F('threshold'), current_stock__gt=0).count(),
+        'out_of_stock': Product.objects.filter(current_stock=0).count()
+    }
+    
+    # Get top selling products - using correct field relationships
+    # We need to use the right field from the SalesProduct model
+    top_products = Product.objects.annotate(
+        total_quantity=Sum('salesproduct__net_weight'),
+        total_revenue=Sum('salesproduct__total')
+    ).filter(total_quantity__gt=0).order_by('-total_quantity')[:5]
+    
+    context = {
+        'total_sales': total_sales,
+        'total_purchases': total_purchases,
+        'total_expenses': total_expenses,
+        'total_damages': total_damages,
+        'recent_sales': recent_sales,
+        'sales_with_totals': sales_with_totals,
+        'recent_purchases': recent_purchases,
+        'inventory_data': inventory_data,
+        'top_products': top_products,
+    }
+    return render(request, 'dashboard.html', context)
+
+@login_required
+def edit_sale(request, sale_id):
+    sale = get_object_or_404(SalesInvoice.objects.select_related('vendor'), id=sale_id)
+    
+    if request.method == 'POST':
+        try:
+            # Update sale details
+            vendor_id = request.POST.get('vendor')
+            vehicle_number = request.POST.get('vehicle_number')
+            reference = request.POST.get('reference')
+            gross_vehicle_weight = request.POST.get('gross_vehicle_weight')
+            
+            # Update basic sale information
+            sale.vendor_id = vendor_id
+            sale.vehicle_number = vehicle_number
+            sale.reference = reference
+            sale.gross_vehicle_weight = gross_vehicle_weight
+            
+            # Update products
+            products = request.POST.getlist('products[]')
+            gross_weights = request.POST.getlist('gross_weights[]')
+            net_weights = request.POST.getlist('net_weights[]')
+            prices = request.POST.getlist('prices[]')
+            discounts = request.POST.getlist('discounts[]')
+            rottens = request.POST.getlist('rottens[]')
+            
+            # Clear existing products
+            sale.sales_products.all().delete()
+            
+            # Add new products
+            total = 0
+            for i in range(len(products)):
+                product = Product.objects.get(id=products[i])
+                gross_weight = Decimal(gross_weights[i])
+                net_weight = Decimal(net_weights[i])
+                price = Decimal(prices[i])
+                discount = Decimal(discounts[i])
+                rotten = Decimal(rottens[i])
+                
+                # Calculate total for this product
+                product_total = (net_weight * price) * (1 - discount/100)
+                total += product_total
+                
+                # Create new sales product
+                sale.sales_products.create(
+                    product=product,
+                    gross_weight=gross_weight,
+                    net_weight=net_weight,
+                    price=price,
+                    discount=discount,
+                    rotten=rotten,
+                    total=product_total
+                )
+            
+            # Update sale totals
+            sale.net_total = total
+            sale.net_total_after_commission = total * Decimal('1.10')  # 10% commission
+            sale.save()
+            
+            messages.success(request, 'Sale updated successfully!')
+            return redirect('view_sale', sale_id=sale.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error updating sale: {str(e)}')
+            return redirect('edit_sale', sale_id=sale.id)
+    
+    # GET request - show edit form
+    vendors = PurchaseVendor.objects.all()
+    products = Product.objects.all()
+    sale_products = sale.sales_products.select_related('product').all()
+    
+    context = {
+        'sale': sale,
+        'vendors': vendors,
+        'products': products,
+        'sale_products': sale_products,
+    }
+    return render(request, 'edit_sale.html', context)
+
+@login_required
+def delete_sale(request, sale_id):
+    sale = get_object_or_404(SalesInvoice, id=sale_id)
+    
+    try:
+        # Get all products from the sale
+        sale_products = sale.sales_products.all()
+        
+        # Restore product quantities back to inventory
+        for sale_product in sale_products:
+            product = sale_product.product
+            product.current_stock += sale_product.net_weight
+            product.save()
+        
+        # Delete the sale
+        sale.delete()
+        messages.success(request, 'Sale deleted successfully!')
+        
+    except Exception as e:
+        messages.error(request, f'Error deleting sale: {str(e)}')
+    
+    return redirect('sales')
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Account created successfully! You can now login.')
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})

@@ -1,255 +1,224 @@
-
-<h1>Test - This page is working!</h1>
-
-
-
-
-
-
-
-{% extends "admin/base_site.html" %}
-{% load static %}
-
-{% block extrahead %}
-    <!-- Materialize CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <style>
-        .dashboard-card {
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-        }
-        .card-content {
-            position: relative;
-            padding: 24px;
-            min-height: 160px;
-        }
-        .stats-icon {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            font-size: 3.5rem;
-            opacity: 0.2;
-        }
-        .metric-title {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #616161;
-            margin-bottom: 8px;
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 600;
-            margin: 10px 0;
-        }
-        .collection {
-            border: none;
-            margin: 0;
-        }
-        .collection-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid #eeeeee !important;
-        }
-        .due-customer {
-            color: #2196F3;
-            font-weight: 500;
-        }
-        .due-vendor {
-            color: #f44336;
-            font-weight: 500;
-        }
-        .rupee:before {
-            content: "₹";
-            font-weight: 400;
-        }
-        .card-title {
-            font-size: 1.2rem !important;
-            font-weight: 600 !important;
-            display: flex !important;
-            align-items: center;
-            gap: 8px;
-            color: #424242 !important;
-        }
-        .card-title i {
-            font-size: 1.5rem;
-        }
-        table.highlight tbody tr:hover {
-            background-color: #f5f5f5 !important;
-        }
-        th {
-            font-weight: 600 !important;
-            color: #616161 !important;
-        }
-        .data-table {
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .total-profit {
-            position: relative;
-            overflow: hidden;
-        }
-        .total-profit::after {
-            content: "";
-            position: absolute;
-            bottom: -30px;
-            right: -30px;
-            width: 80px;
-            height: 80px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 50%;
-        }
-    </style>
-{% endblock %}
+{% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block content %}
-<div class="row">
-    <!-- Main Content -->
-    <div class="col s12">
-        <!-- Summary Cards -->
-        <div class="row">
-            <div class="col s12 m6 l3">
-                <div class="card white dashboard-card">
-                    <div class="card-content">
-                        <i class="material-icons stats-icon blue-text text-lighten-2">shopping_cart</i>
-                        <span class="metric-title">Total Purchases</span>
-                        <h4 class="metric-value blue-text text-darken-2 rupee">{{ total_purchase|floatformat:2 }}</h4>
-                        <span class="grey-text text-darken-1">Last 30 days</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col s12 m6 l3">
-                <div class="card white dashboard-card">
-                    <div class="card-content">
-                        <i class="material-icons stats-icon green-text text-lighten-2">attach_money</i>
-                        <span class="metric-title">Total Sales</span>
-                        <h4 class="metric-value green-text text-darken-2 rupee">{{ total_sales|floatformat:2 }}</h4>
-                        <span class="grey-text text-darken-1">Last 30 days</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col s12 m6 l3">
-                <div class="card white dashboard-card">
-                    <div class="card-content">
-                        <i class="material-icons stats-icon red-text text-lighten-2">money_off</i>
-                        <span class="metric-title">Total Expenses</span>
-                        <h4 class="metric-value red-text text-darken-2 rupee">{{ total_expenses|floatformat:2 }}</h4>
-                        <span class="grey-text text-darken-1">Including damages</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col s12 m6 l3">
-                <div class="card white dashboard-card total-profit">
-                    <div class="card-content">
-                        <i class="material-icons stats-icon teal-text text-lighten-2">show_chart</i>
-                        <span class="metric-title">Net Profit</span>
-                        <h4 class="metric-value teal-text text-darken-2 rupee">{{ profit_loss|floatformat:2 }}</h4>
-                        <span class="grey-text text-darken-1">Current balance</span>
-                    </div>
+<div class="container-fluid py-4">
+    <!-- Welcome Banner -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm" style="background: linear-gradient(135deg, #FFB64D 0%, #FF9017 100%);">
+                <div class="card-body text-white">
+                    <h2 class="mb-0">Welcome to Mango Dashboard</h2>
+                    <p class="mb-0">Here's your business overview</p>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Additional Metrics -->
-        <div class="row">
-            <div class="col s12 m6 l3">
-                <div class="card white dashboard-card">
-                    <div class="card-content">
-                        <i class="material-icons stats-icon orange-text text-lighten-2">warning</i>
-                        <span class="metric-title">Total Damages</span>
-                        <h4 class="metric-value orange-text text-darken-2 rupee">{{ total_damages|floatformat:2 }}</h4>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col s12 m6 l3">
-                <div class="card white dashboard-card">
-                    <div class="card-content">
-                        <i class="material-icons stats-icon purple-text text-lighten-2">inventory</i>
-                        <span class="metric-title">Packaging Cost</span>
-                        <h4 class="metric-value purple-text text-darken-2 rupee">{{ total_packaging_cost|floatformat:2 }}</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Due Sections -->
-        <div class="row">
-            <div class="col s12 m6">
-                <div class="card white dashboard-card">
-                    <div class="card-content">
-                        <span class="card-title"><i class="material-icons blue-text text-darken-2">account_balance</i>Vendor Dues</span>
-                        <div class="collection">
-                            {% for vendor in highest_due_vendors %}
-                            <div class="collection-item">
-                                <span>{{ vendor.name }}</span>
-                                <span class="due-vendor rupee">{{ vendor.due|floatformat:2 }}</span>
-                            </div>
-                            {% empty %}
-                            <div class="collection-item grey-text">No outstanding vendor dues</div>
-                            {% endfor %}
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Total Sales</h6>
+                            <h4 class="mb-0">₹{{ total_sales|floatformat:2|default:"0.00" }}</h4>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col s12 m6">
-                <div class="card white dashboard-card">
-                    <div class="card-content">
-                        <span class="card-title"><i class="material-icons blue-text text-darken-2">people</i>Customer Dues</span>
-                        <div class="collection">
-                            {% for customer in highest_due_customers %}
-                            <div class="collection-item">
-                                <span>{{ customer.name }}</span>
-                                <span class="due-customer rupee">{{ customer.due|floatformat:2 }}</span>
-                            </div>
-                            {% empty %}
-                            <div class="collection-item grey-text">No outstanding customer dues</div>
-                            {% endfor %}
+                        <div class="ms-3">
+                            <i class="bi bi-cart-check fs-1 text-warning"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Total Purchases</h6>
+                            <h4 class="mb-0">₹{{ total_purchases|floatformat:2|default:"0.00" }}</h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-bag-check fs-1 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Total Expenses</h6>
+                            <h4 class="mb-0">₹{{ total_expenses|floatformat:2|default:"0.00" }}</h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-cash-stack fs-1 text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Total Damages</h6>
+                            <h4 class="mb-0">₹{{ total_damages|floatformat:2|default:"0.00" }}</h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Available Lots Table -->
-        <div class="row">
-            <div class="col s12">
-                <div class="card white data-table">
-                    <div class="card-content">
-                        <span class="card-title"><i class="material-icons teal-text text-darken-2">storage</i>Inventory Summary</span>
-                        <table class="striped highlight">
-                            <thead class="teal lighten-5">
+    <!-- Inventory Status -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Inventory Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-success bg-opacity-10 rounded">
+                                <h6 class="text-success mb-1">In Stock</h6>
+                                <h4 class="mb-0">{{ inventory_data.in_stock|default:"0" }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-warning bg-opacity-10 rounded">
+                                <h6 class="text-warning mb-1">Low Stock</h6>
+                                <h4 class="mb-0">{{ inventory_data.low_stock|default:"0" }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-danger bg-opacity-10 rounded">
+                                <h6 class="text-danger mb-1">Out of Stock</h6>
+                                <h4 class="mb-0">{{ inventory_data.out_of_stock|default:"0" }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Top Selling Products</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <th>Lot Number</th>
                                     <th>Product</th>
-                                    <th class="right-align">Stock</th>
-                                    <th class="right-align">Value</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for lot in available_lots %}
+                                {% if top_products %}
+                                    {% for product in top_products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td>{{ product.total_quantity|default:"0" }}</td>
+                                        <td>₹{{ product.total_revenue|default:"0.00"|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">No sales data available</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Recent Sales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td>{{ lot.lot_number }}</td>
-                                    <td>{{ lot.product.name }}</td>
-                                    <td class="right-align">{{ lot.remaining_quantity|floatformat:2 }}</td>
-                                    <td class="right-align rupee">{{ lot.price|floatformat:2 }}</td>
+                                    <th>Invoice</th>
+                                    <th>Vendor</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
                                 </tr>
-                                {% empty %}
+                            </thead>
+                            <tbody>
+                                {% if recent_sales %}
+                                    {% for item in sales_with_totals %}
+                                    <tr>
+                                        <td>{{ item.sale.invoice_number }}</td>
+                                        <td>{{ item.sale.vendor.name }}</td>
+                                        <td>{{ item.sale.date|date:"d/m/Y" }}</td>
+                                        <td>₹{{ item.total|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No recent sales</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Recent Purchases</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td colspan="4" class="center-align grey-text">No inventory available</td>
+                                    <th>Invoice</th>
+                                    <th>Vendor</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
                                 </tr>
-                                {% endfor %}
+                            </thead>
+                            <tbody>
+                                {% if recent_purchases %}
+                                    {% for purchase in recent_purchases %}
+                                    <tr>
+                                        <td>{{ purchase.invoice_number }}</td>
+                                        <td>{{ purchase.vendor.name }}</td>
+                                        <td>{{ purchase.date|date:"d/m/Y" }}</td>
+                                        <td>
+                                          ₹{{ purchase.net_total|floatformat:2|default:"0.00" }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No recent purchases</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -259,10 +228,26 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize any Materialize components if needed
-    });
-</script>
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+        background-color: #fff;
+        border-top-left-radius: 10px !important;
+        border-top-right-radius: 10px !important;
+    }
+    
+    .table > :not(caption) > * > * {
+        padding: 0.75rem;
+    }
+    
+    .bi {
+        opacity: 0.8;
+    }
+</style>
 {% endblock %}
+

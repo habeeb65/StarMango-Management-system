@@ -1,279 +1,248 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Reports & Analytics - Mango Management System{% endblock %}
+{% block title %}Reports & Analytics{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="h2">Reports & Analytics</h1>
+<div class="container-fluid p-4">
+    <!-- Welcome Banner with Mango Theme -->
+    <div class="card mb-4 bg-gradient" style="background: linear-gradient(135deg, #FF9F1C 0%, #FFBF69 100%);">
+        <div class="card-body text-white">
+            <h4 class="mb-0">Reports & Analytics</h4>
+            <p class="mb-0">Get insights into your business performance</p>
+        </div>
     </div>
-</div>
 
-<!-- Date Range Filter -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <label for="start_date" class="form-label">Start Date</label>
-                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
-            </div>
-            <div class="col-md-4">
-                <label for="end_date" class="form-label">End Date</label>
-                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">&nbsp;</label>
-                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5 class="card-title">Total Sales</h5>
-                <h2 class="card-text">₹{{ total_sales }}</h2>
-                <p class="card-text"><small>{{ sales_count }} transactions</small></p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5 class="card-title">Total Purchases</h5>
-                <h2 class="card-text">₹{{ total_purchases }}</h2>
-                <p class="card-text"><small>{{ purchases_count }} transactions</small></p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <h5 class="card-title">Net Profit</h5>
-                <h2 class="card-text">₹{{ net_profit }}</h2>
-                <p class="card-text"><small>Gross margin: {{ gross_margin }}%</small></p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <h5 class="card-title">Average Order Value</h5>
-                <h2 class="card-text">₹{{ avg_order_value }}</h2>
-                <p class="card-text"><small>Per transaction</small></p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reports Grid -->
-<div class="row">
-    <!-- Sales Trend Chart -->
-    <div class="col-md-8 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Sales Trend</h5>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportChart('salesChart', 'sales_trend')">
-                        <i class="fas fa-download"></i> Export
-                    </button>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <!-- Total Sales -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Sales</h6>
+                            <h3 class="mb-0 text-warning">₹{{ total_sales }}</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-cart text-warning fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <canvas id="salesChart"></canvas>
+        </div>
+
+        <!-- Total Purchases -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Purchases</h6>
+                            <h3 class="mb-0 text-warning">₹{{ total_purchases }}</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-bag text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Top Products -->
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0">Top Selling Products</h5>
+        <!-- Total Expenses -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Expenses</h6>
+                            <h3 class="mb-0 text-warning">₹{{ total_expenses }}</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-cash-stack text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for product in top_products %}
-                            <tr>
-                                <td>{{ product.name }}</td>
-                                <td>{{ product.quantity }}</td>
-                                <td>₹{{ product.revenue }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        </div>
+
+        <!-- Total Damages -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Damages</h6>
+                            <h3 class="mb-0 text-warning">₹{{ total_damages }}</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Inventory Status -->
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Inventory Status</h5>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportChart('inventoryChart', 'inventory_status')">
-                        <i class="fas fa-download"></i> Export
-                    </button>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Inventory Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="display-6 text-success">{{ inventory_data.in_stock }}</div>
+                                <div class="text-muted">In Stock</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="display-6 text-warning">{{ inventory_data.low_stock }}</div>
+                                <div class="text-muted">Low Stock</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="display-6 text-danger">{{ inventory_data.out_of_stock }}</div>
+                                <div class="text-muted">Out of Stock</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <canvas id="inventoryChart"></canvas>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Payment Methods</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for method, count in payment_methods|zip:payment_data %}
+                                <tr>
+                                    <td>{{ method }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Payment Methods -->
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Payment Methods Distribution</h5>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportChart('paymentChart', 'payment_methods')">
-                        <i class="fas fa-download"></i> Export
-                    </button>
+    <!-- Recent Activity -->
+    <div class="row">
+        <!-- Recent Sales -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Recent Sales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Vendor</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_sales %}
+                                <tr>
+                                    <td>{{ sale.invoice_number }}</td>
+                                    <td>{{ sale.vendor.name }}</td>
+                                    <td>{{ sale.date|date:"d/m/Y" }}</td>
+                                    <td>₹{{ sale.sales_products.all|sum_total }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <canvas id="paymentChart"></canvas>
-            </div>
         </div>
-    </div>
 
-    <!-- Detailed Reports -->
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Detailed Reports</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Sales Report</h5>
-                                <p class="card-text">Detailed sales analysis with product breakdown</p>
-                                <a href="{% url 'export_sales_report' %}" class="btn btn-primary">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Inventory Report</h5>
-                                <p class="card-text">Current inventory status and stock movements</p>
-                                <a href="{% url 'export_inventory_report' %}" class="btn btn-primary">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Financial Report</h5>
-                                <p class="card-text">Profit and loss analysis with expenses</p>
-                                <a href="{% url 'export_financial_report' %}" class="btn btn-primary">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </div>
-                        </div>
+        <!-- Recent Purchases -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Recent Purchases</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Vendor</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for purchase in recent_purchases %}
+                                <tr>
+                                    <td>{{ purchase.invoice_number }}</td>
+                                    <td>{{ purchase.vendor.name }}</td>
+                                    <td>{{ purchase.date|date:"d/m/Y" }}</td>
+                                    <td>₹{{ purchase.net_total }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Sales Trend Chart
-    const salesCtx = document.getElementById('salesChart').getContext('2d');
-    new Chart(salesCtx, {
-        type: 'line',
-        data: {
-            labels: JSON.parse('{{ sales_dates|safe }}'),
-            datasets: [{
-                label: 'Sales',
-                data: JSON.parse('{{ sales_data|safe }}'),
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    // Inventory Status Chart
-    const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
-    new Chart(inventoryCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['In Stock', 'Low Stock', 'Out of Stock'],
-            datasets: [{
-                data: JSON.parse('{{ inventory_data|safe }}'),
-                backgroundColor: [
-                    'rgb(75, 192, 192)',
-                    'rgb(255, 205, 86)',
-                    'rgb(255, 99, 132)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    // Payment Methods Chart
-    const paymentCtx = document.getElementById('paymentChart').getContext('2d');
-    new Chart(paymentCtx, {
-        type: 'pie',
-        data: {
-            labels: JSON.parse('{{ payment_methods|safe }}'),
-            datasets: [{
-                data: JSON.parse('{{ payment_data|safe }}'),
-                backgroundColor: [
-                    'rgb(255, 99, 132)',
-                    'rgb(54, 162, 235)',
-                    'rgb(255, 205, 86)',
-                    'rgb(75, 192, 192)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-});
-
-function exportChart(canvasId, filename) {
-    const canvas = document.getElementById(canvasId);
-    const link = document.createElement('a');
-    link.download = `${filename}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+<style>
+.bg-gradient {
+    background: linear-gradient(135deg, #FF9F1C 0%, #FFBF69 100%);
 }
-</script>
+.text-warning {
+    color: #FF9F1C !important;
+}
+.btn-warning, .btn-outline-warning {
+    background-color: #FF9F1C;
+    border-color: #FF9F1C;
+    color: white;
+}
+.btn-outline-warning {
+    background-color: transparent;
+    color: #FF9F1C;
+}
+.btn-outline-warning:hover {
+    background-color: #FF9F1C;
+    color: white;
+}
+.badge.bg-warning {
+    background-color: #FF9F1C !important;
+}
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
 {% endblock %}

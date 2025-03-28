@@ -17,21 +17,25 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include 
-
-from django.conf.urls.static import static
+from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect
+from django.conf.urls.static import static
 from Accounts.views import generate_sales_invoice_pdf, home
+
+def redirect_to_login(request):
+    return redirect('login')
 
 def redirect_to_accounts(request):
     return redirect('/accounts/login/')
 
-    
 urlpatterns = [
-    path('', home, name='home'),
-    path('admin/', admin.site.urls),  # Admin and dashboard are now at the same URL
+    path('', redirect_to_login),
+    path('admin/', admin.site.urls),
     path('accounts/', include('Accounts.urls')),
+    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('sales_invoice/<int:invoice_id>/pdf/', generate_sales_invoice_pdf, name='generate_sales_invoice_pdf'),
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
