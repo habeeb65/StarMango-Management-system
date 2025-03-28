@@ -1312,7 +1312,13 @@ def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            
+            # Check if the user should be admin (staff)
+            if request.POST.get('is_staff'):
+                user.is_staff = True
+                user.save()
+                
             messages.success(request, 'Account created successfully! You can now login.')
             return redirect('login')
     else:
