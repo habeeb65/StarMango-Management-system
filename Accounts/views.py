@@ -105,7 +105,7 @@ def sales_view(request):
     
     # Get products for sale creation
     products = Product.objects.filter(current_stock__gt=0)
-    
+
     context = {
         'sales': sales,
         'today_sales': today_sales,
@@ -226,72 +226,6 @@ pdfmetrics.registerFont(TTFont('DejaVuSans', FONT_PATH))
 pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', BOLD_FONT_PATH))
 pdfmetrics.registerFont(TTFont('NotoSans', FONT_PATH))
 pdfmetrics.registerFont(TTFont('NotoSans-Bold', BOLD_FONT_PATH))
-
-@staff_member_required
-def dashboard(request):
-    # Total Purchases
-    total_purchase = PurchaseInvoice.objects.aggregate(total=Sum('net_total'))['total'] or Decimal('0')
-
-    # Total Sales
-    sales_with_totals = SalesInvoice.objects.annotate(
-    computed_total=Sum('sales_products__total'))
-    total_sales = sum(s.computed_total or 0 for s in sales_with_totals)
-
-    # Total Expenses
-    total_expenses = Expense.objects.aggregate(total=Sum('amount'))['total'] or Decimal('0')
-
-    # Total Damages
-    total_damages = Damages.objects.aggregate(total=Sum('amount_loss'))['total'] or Decimal('0')
-
-
-    # Total Packaging Cost
-    packaging_invoices = Packaging_Invoice.objects.all()
-    total_packaging_cost = sum([pi.packaging_total for pi in packaging_invoices])
-
-    # Profit and Loss Calculation
-    profit_loss = total_sales - (total_purchase + total_expenses + total_packaging_cost + total_damages)
-
-    highest_due_customers = Customer.objects.annotate(
-    total_sales_amount=Sum('sales_invoices__sales_products__total'),
-    total_paid_amount=Sum('sales_invoices__payments__amount')
-).annotate(
-    due=ExpressionWrapper(
-        F('total_sales_amount') - F('total_paid_amount'),
-        output_field=DecimalField()
-    )
-).order_by('-due')[:5]
-
-    # Highest Due Customers
-    highest_due_vendors = PurchaseVendor.objects.annotate(
-    total_purchase_amount=Sum('invoices__net_total'),
-    total_paid_amount=Sum('invoices__payments__amount')
-).annotate(
-    due=ExpressionWrapper(
-        F('total_purchase_amount') - F('total_paid_amount'),
-        output_field=DecimalField()
-    )
-).order_by('-due')[:5]
-    available_lots = PurchaseProduct.objects.annotate(
-    sold_quantity=Sum('invoice__sales_lots__quantity')
-).annotate(
-    remaining_quantity=ExpressionWrapper(
-        F('quantity') - (F('sold_quantity') or Decimal('0')),
-        output_field=DecimalField()
-    )
-).filter(remaining_quantity__gt=0)
-
-    context = {
-        'total_purchase': total_purchase,
-        'total_sales': total_sales,
-        'total_expenses': total_expenses,
-        'total_damages': total_damages,
-        'total_packaging_cost': total_packaging_cost,
-        'profit_loss': profit_loss,
-        'highest_due_vendors': highest_due_vendors,
-        'highest_due_customers': highest_due_customers,
-        'available_lots': available_lots,
-    }
-    return render(request, 'admin/dashboard.html', context)
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -1107,38 +1041,6 @@ def print_invoice(request, sale_id):
 
 def is_admin(user):
     return user.is_staff
-
-@user_passes_test(is_admin)
-def admin_dashboard(request):
-    # Get total users
-    total_users = User.objects.count()
-    
-    # Get total products
-    total_products = Product.objects.count()
-    
-    # Get total vendors
-    total_vendors = PurchaseVendor.objects.count()
-    
-    # Get total sales
-    total_sales = SalesInvoice.objects.annotate(
-        total=Sum('sales_products__total')
-    ).aggregate(total=Sum('total'))['total'] or 0
-    
-    # Get recent sales
-    recent_sales = SalesInvoice.objects.select_related('vendor').order_by('-date')[:5]
-    
-    # Get low stock products (using threshold)
-    low_stock_products = Product.objects.filter(current_stock__lte=F('threshold'))[:5]
-    
-    context = {
-        'total_users': total_users,
-        'total_products': total_products,
-        'total_vendors': total_vendors,
-        'total_sales': total_sales,
-        'recent_sales': recent_sales,
-        'low_stock_products': low_stock_products,
-    }
-    return render(request, 'admin_dashboard.html', context)
 
 @login_required
 def dashboard_view(request):

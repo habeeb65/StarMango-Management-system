@@ -16,8 +16,8 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include 
-from django.contrib.auth.views import LoginView
+from django.urls import path, include
+from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect
 from django.conf.urls.static import static
 from Accounts.views import generate_sales_invoice_pdf, home
@@ -29,11 +29,18 @@ def redirect_to_accounts(request):
     return redirect('/accounts/login/')
 
 urlpatterns = [
-    path('', redirect_to_login),
+    # Use the standard Django admin
     path('admin/', admin.site.urls),
+    
+    # Include Accounts app URLs with proper namespace
     path('accounts/', include('Accounts.urls')),
+    
+    # Authentication URLs
     path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('sales_invoice/<int:invoice_id>/pdf/', generate_sales_invoice_pdf, name='generate_sales_invoice_pdf'),
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+    
+    # Redirect root to accounts home
+    path('', lambda request: redirect('home')),
 ]
 
 if settings.DEBUG:

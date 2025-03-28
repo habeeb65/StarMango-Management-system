@@ -3,34 +3,11 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from . import views  # Import views directly from the current module
 
-# Customize Django Admin Appearance
-admin.site.site_header = "Star Mango Admin"
-admin.site.site_title = "Star Mango Admin Portal"
-admin.site.index_title = "Welcome to the Star Mango Admin Portal"
-
-# ✅ Create a Proper Custom Admin Site
-class CustomAdminSite(admin.AdminSite):
-    """A custom admin panel where the dashboard is the default page."""
-    site_header = "Star Mango Admin"
-    site_title = "Star Mango Admin Portal"
-    index_title = "Welcome to the Star Mango Admin Portal"
-
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('', self.admin_view(views.dashboard), name='custom_admin_dashboard'),  # Dashboard as default
-        ]
-        return custom_urls + urls
-
-# ✅ Register the custom admin site properly
-custom_admin_site = CustomAdminSite(name="custom_admin")
-
 urlpatterns = [
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('sales/', views.sales_view, name='sales'),
     path('reports/', views.reports_view, name='reports'),
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     
     # Authentication URLs
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
