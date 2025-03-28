@@ -14,22 +14,20 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth.views import LoginView, LogoutView
-from django.shortcuts import redirect
+from django.conf import settings
 from django.conf.urls.static import static
-from Accounts.views import generate_sales_invoice_pdf, home
+from django.shortcuts import redirect
+from django.contrib.auth.views import LoginView, LogoutView
 
-def redirect_to_login(request):
-    return redirect('login')
-
-def redirect_to_accounts(request):
-    return redirect('/accounts/login/')
+# Set Admin appearance with standard Django admin only
+admin.site.site_header = "Star Mango Admin"
+admin.site.site_title = "Star Mango Admin Portal"
+admin.site.index_title = "Welcome to the Star Mango Admin Portal"
 
 urlpatterns = [
-    # Use the standard Django admin
+    # Use the standard Django admin only
     path('admin/', admin.site.urls),
     
     # Include Accounts app URLs with proper namespace
@@ -41,11 +39,11 @@ urlpatterns = [
     
     # Redirect root to accounts home
     path('', lambda request: redirect('home')),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
+# Add this if you need to serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
 
