@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 
 {% block title %}Reports & Analytics{% endblock %}
 
@@ -117,28 +118,22 @@
 
         <!-- Payment Methods -->
         <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
                     <h5 class="mb-0">Payment Methods</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Method</th>
-                                    <th>Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for method, count in payment_methods|zip:payment_data %}
-                                <tr>
-                                    <td>{{ method }}</td>
-                                    <td>{{ count }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="row">
+                        {% for payment in payment_data %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center">
+                                    <h3 class="text-warning">{{ payment.count }}</h3>
+                                    <p class="text-muted mb-0">{{ payment.method }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
